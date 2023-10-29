@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>AltSchool Blog Homepage</title>
+</head>
+
+<body>
+  <h1 align="center">Welcome to AltSchool Blog Homepage</h1>
+
+  <h3 align="center">To Login / Sign up, Click <a href="/users/login">here</a></h3>
+  <hr><br>
+  <form align="right" action="/blogs" method="GET">
+    <label for="search">Search:</label>
+    <input type="text" name="search" id="search" placeholder="Search blogs...">
+    <button type="submit">Search</button>
+  </form>
+  <hr>
+  <% if (blog && blog.length > 0) { %>
+  <ul align="center">
+    <% blog.forEach(blogItem => { %>
+    <li>
+      <h2><a href="/blogs/<%= blogItem._id %>"><%= blogItem.title %></a></h2>
+      <p>Description: <%= blogItem.description %></p>
+      <p>Published Date: <%= blogItem.timestamp %></p>
+      <p>Author:<a href="/users/<%= blogItem.author %>"><%= blogItem.author %></a></p>
+    </li>
+    <% }); %>
+  </ul>
+
+  <div>
+    <p>Page <%= currentPage %> of <%= totalPages %></p>
+    <p>Total Blogs: <%= total %></p>
+    <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>">Previous</a>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>">Next</a>
+    <% } %>
+  </div>
+  <% } else { %>
+  <p>No published blogs available.</p>
+  <% } %>
+
+</body>
+
+</html>

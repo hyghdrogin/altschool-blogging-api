@@ -20,14 +20,6 @@ const validateCreatingBlog = (user) => {
 	return schema.validate(user, options);
 };
 
-const validateUserLogin = (user) => {
-	const schema = Joi.object({
-		emailUsername: Joi.string().min(4).max(50).required(),
-		password: Joi.string().min(4).required(),
-	});
-	return schema.validate(user, options);
-};
-
 module.exports = {
-	validateCreatingBlog, validateUserLogin
+	validateCreatingBlog,
 };

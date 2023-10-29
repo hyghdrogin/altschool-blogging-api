@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Welcome <%= user.username %>, to your Blog Homepage</title>
+</head>
+
+<body>
+  <h1 align="center">Hi, <%= user.username %></h1>
+  <p align="center">Welcome to your Blog Homepage page</p><br>
+
+  <p align="center">This is where you handle your to do blogs. You can navigate to the following pages:</p>
+  <ul align="center">
+    <li><a href="/blogs/create/">Create a blog articles</a></li>
+    <li><a href="/blogs">Get all blog articles</a></li>
+    <li><a href="/blogs/<%= user._id %>">Get all your blog articles</a></li>
+    <li><a href="/blogs?state=draft">Get your draft blogs articles</a></li>
+    <li><a href="/tasks?state=published">Get all published blogs articles</a></li>
+    <li><a href="/users/logout">Logout</a></li>
+  </ul>
+</body>
+
+</html>
