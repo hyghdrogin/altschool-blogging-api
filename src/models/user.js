@@ -30,7 +30,6 @@ const userSchema = new Schema({
 	},
 	blogs: {
 		type: Schema.Types.Array,
-		default: {},
 		ref: "Blog"
 	}
 }, {

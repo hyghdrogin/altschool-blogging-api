@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" , content="width=device-width" , initial-scale="1.0">
+  <title>Update Blog</title>
+  <link rel="stylesheet" , href="styles.css">
+</head>
+
+<body>
+  <h1>Update Blog</h1>
+  <p>Blog ID: <%= blogId %></p>
+
+  <form method="POST" action="/blogs/update/<%= blog._id %>">
+    <label for="title">Edit Title:</label>
+    <input type="text" id="title" name="title" value="<%= blog.title %>"><br>
+
+    <label for="description">Edit Description:</label>
+    <input type="text" id="description" name="description" value="<%= blog.description %>"></textarea><br>
+
+    <label for="tags">Edit Tags (comma-separated):</label>
+    <input type="text" id="tags" name="tags" value="<%= blog.tags %>"><br>
+
+    <label for="body">Edit Body:</label>
+    <textarea id="body" name="body" rows="5" cols="50"><%= blog.body %></textarea><br>
+
+    <label for="state">Edit State:</label>
+    <select id="state" name="state" required>
+      <option value="draft" <%= blog.state === 'draft' ? 'selected' : '' %>>Draft</option>
+      <option value="published" <%= blog.state === 'published' ? 'selected' : '' %>>Published</option>
+    </select><br>
+
+    <button type="submit" formmethod="post">Update Blog</button>
+  </form>
+
+  <a href="/blogs">Back to Blogs</a>
+  <a href="/blogs/<%= blog._id %>">Go Back</a>
+</body>
+
+</html>

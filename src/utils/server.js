@@ -20,11 +20,13 @@ const createServer = () => {
 	app.use("/", router);
 
 	app.get("/", async (req, res) => {
+		res.clearCookie("token");
 		const response = await fetchBlogs(req);
-		console.log(response);
 		return res.status(200).render("homepage", {
+			total: response.total,
+			totalPages: response.totalPages,
 			currentPage: response.currentPage,
-			blog: response.blog,
+			blogs: response.blogs,
 		});
 	});
 	

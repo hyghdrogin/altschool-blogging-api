@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>View User</title>
+</head>
+
+<body>
+  <h1 align="center">User Profile</h1>
+  <p align="center">User ID: <%= userId %></p>
+  <div align="center">
+    <h3>Username: <%= user.username %></h3>
+    <p>User Firstname: <%= user.firstname %></p>
+    <p>User lastname: <%= user.lastname %></p>
+    <p>User Blog Count: <%= blogs %></p>
+    <p>Email: <%= user.email %></p>
+  </div>
+
+  <a href="/">Back to Homepage</a>
+  <a href="/blogs">Back to Blogs</a>
+</body>
+
+</html>

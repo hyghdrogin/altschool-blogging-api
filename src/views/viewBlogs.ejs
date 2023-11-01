@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>My blogs</title>
+</head>
+
+<body>
+  <h1>My blogs</h1>
+  <hr>
+
+  <form align="right" action="/blogs" method="GET">
+    <label for="search">Search:</label>
+    <input type="text" name="search" id="search" placeholder="Search blogs...">
+    <button type="submit">Search</button>
+  </form>
+  <hr>
+
+  <% if (blogs.length > 0) { %>
+  <ul>
+    <% blogs.forEach(blog => { %>
+    <li>
+      <strong>Title:</strong> <%= blog.title %><br>
+      <strong>Status:</strong> <%= blog.state %><br>
+      <a href="/blogs/owner/author/<%= blog._id %>">View Blog</a>
+      <hr>
+    </li>
+    <% }); %>
+  </ul>
+
+  <div>
+    <strong>Total blogs:</strong> <%= total %><br>
+    <strong>Total Pages:</strong> <%= totalPages %><br>
+    <strong>Current Page:</strong> <%= currentPage %>
+  </div>
+
+  <div>
+    <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>">Previous Page</a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>">Next Page</a>
+    <% } %>
+  </div>
+  <% } else { %>
+  <p>No blogs available.</p>
+  <% } %>
+
+  <a href="/">Back to Homepage</a>
+</body>
+
+</html>

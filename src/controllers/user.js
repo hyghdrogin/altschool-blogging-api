@@ -92,10 +92,10 @@ const userLogin = async (req, res) => {
 };
 
 const viewUser = async(req, res) => {
-	const { userId } = req.params;
+	const { username } = req.params;
 
 	try {
-		const user = await models.User.findById({ userId });
+		const user = await models.User.findOne({ username });
 
 		if (!user) {
 			return res.status(404).json({
@@ -105,7 +105,7 @@ const viewUser = async(req, res) => {
 		}
 
 		return res.status(200).render("viewProfile", {
-			userId, user
+			userId: user._id, user, blogs: user.blogs.length
 		});
 	} catch (error) {
 		logger.error(`Error logging in user: ${error.message}`);

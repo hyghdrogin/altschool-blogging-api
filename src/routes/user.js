@@ -18,7 +18,7 @@ router.get("/dashboard", (req, res) => {
 router.post("/", userRegistration);
 router.post("/login", userLogin);
 
-router.get("/:userId", viewUser);
+router.get("/blog/:username", viewUser);
 router.get("/logout", logOut);
 
 module.exports = router;

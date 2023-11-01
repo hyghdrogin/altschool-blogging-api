@@ -10,20 +10,20 @@
 
   <h3 align="center">To Login / Sign up, Click <a href="/users/login">here</a></h3>
   <hr><br>
-  <form align="right" action="/blogs" method="GET">
+  <form align="right" action="/" method="GET">
     <label for="search">Search:</label>
     <input type="text" name="search" id="search" placeholder="Search blogs...">
     <button type="submit">Search</button>
   </form>
   <hr>
-  <% if (blog && blog.length > 0) { %>
+  <% if (blogs && blogs.length > 0) { %>
   <ul align="center">
-    <% blog.forEach(blogItem => { %>
+    <% blogs.forEach(blog => { %>
     <li>
-      <h2><a href="/blogs/<%= blogItem._id %>"><%= blogItem.title %></a></h2>
-      <p>Description: <%= blogItem.description %></p>
-      <p>Published Date: <%= blogItem.timestamp %></p>
-      <p>Author:<a href="/users/<%= blogItem.author %>"><%= blogItem.author %></a></p>
+      <h2><a href="/blogs/<%= blog._id %>"><%= blog.title %></a></h2>
+      <p>Description: <%= blog.description %></p>
+      <p>Published Date: <%= blog.timestamp %></p>
+      <p>Author:<a href="/users/blog/<%= blog.author %>"><%= blog.author %></a></p>
     </li>
     <% }); %>
   </ul>

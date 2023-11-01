@@ -1,10 +1,11 @@
+/* eslint-disable quotes */
 const models = require("../models/index.js");
 const logger = require("../utils/logger.js");
 const { validateCreatingBlog } = require("../validations/blog.js");
-const { calculateReadingTime } = require("../utils/readingTime.js");
+const { calculateReadingTime } = require("../utils/helpers.js");
 
 const createBlog = async(req, res) => {
-	const username = req.user;
+	const { username } = req.user;
 
 	try {
 		const user = await models.User.findOne({ username });
@@ -18,15 +19,18 @@ const createBlog = async(req, res) => {
 		const blog = await models.Blog.create({
 			title: value.title,
 			description: value.description,
-			author: user._id,
+			author: username,
 			tags: value.tags,
 			body: value.body,
 			readingTime: calculateReadingTime(value.body)
 		});
 		user.blogs.push(blog._id);
 		user.save();
+
+		blog.readCount++;
+		await blog.save();
 		return res.status(201).render("viewBlog", {
-			blog, user
+			blog, user, blogId: blog._id
 		});
 	} catch (error) {
 		logger.error(`Error creating blog: ${error.message}`);
@@ -41,8 +45,9 @@ const readSingleBlog = async(req, res) => {
 	const { blogId } = req.params;
 
 	try {
-		const blog = await models.Blog.findOne({ _id: blogId }, { state: "published"});
-		if (!blog) {
+		const blog = await models.Blog.findById(blogId);
+		console.log(blog);
+		if (!blog || blog.state === "draft") {
 			return res.status(404).json({
 				status: false,
 				message: "Blog not found"
@@ -54,18 +59,12 @@ const readSingleBlog = async(req, res) => {
 				message: "Invalid Blog Id"
 			});
 		}
-		const user = await models.User.findOne({ _id: blog.author });
 
 		blog.readCount++;
 		await blog.save();
 
-		const blogAuthor = {
-			...blog,
-			author: `${user.username}`
-		};
-
 		return res.status(200).render("viewBlog", ({
-			blog, blogId, author: blogAuthor.author
+			blog, blogId, author: blog.author
 		}));
 	} catch (error) {
 		logger.error(`Error reading blog: ${error.message}`);
@@ -80,66 +79,67 @@ const fetchBlogs = async (req) => {
 	let { page, limit, search, order, orderBy } = req.query;
 	page = page || 1;
 	limit = limit || 20;
-  
+	
 	const startIndex = (page - 1) * limit;
 	const endIndex = page * limit;
+	
+	let query = { state: "published", deleted: false };
   
-	let query = { state: "published"};
-
 	if (search) {
+		const searchRegex = new RegExp(search, 'i');
 		query.$or = [
-			{ title: { $regex: search, $options: "i" } },
-			{ author: { $regex: search, $options: "i" } },
-			{ tags: { $regex: search, $options: "i" } },
+			{ title: { $regex: searchRegex } },
+			{ author: { $regex: searchRegex } },
+			{ tags: { $elemMatch: { $regex: searchRegex } } } 
 		];
 	}
-
+  
 	let sort = {};
 	if (order && orderBy) {
 		if (orderBy === "read_count" || orderBy === "reading_time" || orderBy === "timestamp") {
 			sort[orderBy] = order === "asc" ? 1 : -1;
 		}
 	}
-  
+	
 	const blog = await models.Blog.find(query)
 		.sort(sort)
 		.limit(endIndex)
 		.skip(startIndex)
 		.exec();
-  
+	
 	if (blog.length < 1) {
 		return {
 			status: true,
 			message: "No content",
 		};
 	}
-  
+	
 	const count = await models.Blog.countDocuments(query);
-  
+	
 	const totalPages = Math.ceil(count / limit);
 	const total = blog.length;
-  
+	
 	return {
 		total,
 		totalPages,
 		currentPage: page,
-		blog,
+		blogs: blog,
 	};
 };
+  
 
 const ownerBlog = async (req, res) => {
-	const { userId } = req.params;
+	const { username } = req.user;
 	let { page, limit, state } = req.query;
-
+	
 	try {
-		const user = await models.User.findById(userId);
 		page = page || 1;
 		limit = limit || 20;
   
 		const startIndex = (page - 1) * limit;
 		const endIndex = page * limit;
   
-		let query = { user: user._id };
+		let query = { username };
 
 		if (state) {
 			if (state === "draft" || state === "published") {
@@ -164,11 +164,11 @@ const ownerBlog = async (req, res) => {
 		const totalPages = Math.ceil(count / limit);
 		const total = blog.length;
   
-		return res.status(200).render("viewBlog", {
+		return res.status(200).render("viewBlogs", {
 			total,
 			totalPages,
 			currentPage: page,
-			blog,
+			blogs: blog,
 		});
 	} catch (error) {
 		logger.error(`Error fetching blogs: ${error.message}`);
@@ -179,12 +179,45 @@ const ownerBlog = async (req, res) => {
 	}
 };
 
+const readOwnerSingleBlog = async(req, res) => {
+	const { username } = req.user;
+	const { blogId } = req.params;
+
+	try {
+		const blog = await models.Blog.findById(blogId);
+		if (!blog) {
+			return res.status(404).json({
+				status: false,
+				message: "Blog not found"
+			});
+		}
+		if (blog.deleted) {
+			return res.status(204).json({
+				status: false,
+				message: "Invalid Blog Id"
+			});
+		}
+
+		blog.readCount++;
+		await blog.save();
+
+		return res.status(200).render("viewBlog", ({
+			blog, blogId, author: username
+		}));
+	} catch (error) {
+		logger.error(`Error reading blog: ${error.message}`);
+		return res.status(500).json({
+			status: false,
+			message: "Internal server error"
+		});
+	}
+};
+
 const updateBlog = async(req, res) => {
 	const { username } = req.user;
 	const { blogId } = req.params;
 	try {
-		const user = await models.User.findOne({ username });
-		const blog = await models.Blog.findOne({ _id: blogId, user: user._id });
+		const blog = await models.Blog.findOne({ _id: blogId, author: username });
         
 		if (!blog) {
 			return res.status(404).json({
@@ -200,10 +233,10 @@ const updateBlog = async(req, res) => {
 			});
 		}
 
-		if (user._id !== blog.author) {
+		if (username !== blog.author) {
 			return res.status(403).json({
 				status: false,
-				message: "You can not update this blog authorized"
+				message: "You can not update this blog"
 			});
 		}
 		const updateObject = {};
@@ -215,7 +248,7 @@ const updateBlog = async(req, res) => {
 
 		const updatedBlog = await models.Blog.findByIdAndUpdate(blogId, updateObject, { new: true });
   
-		return res.status(200).render("viewSingle", {
+		return res.status(200).render("viewBlog", {
 			blogId,
 			blog: updatedBlog,
 		});
@@ -232,7 +265,6 @@ const updatePrefill = async(req, res) => {
 	const { blogId } = req.params;
 	const { username } = req.user;
 	try {
-		const user = await models.User.findOne({ username });
 		const blog = await models.Blog.findOne({ _id: blogId });
 		if (!blog) {
 			return res.status(404).json({
@@ -246,15 +278,15 @@ const updatePrefill = async(req, res) => {
 				message: "Invalid Blog Id"
 			});
 		}
-		if (user._id !== blog.author) {
+		if (username !== blog.author) {
 			return res.status(403).json({
 				status: false,
 				message: "You can not update this blog authorized"
 			});
 		}
 
-		return res.status(200).render("viewBlog", ({
-			blog, blogId, author: user.username
+		return res.status(200).render("update", ({
+			blog, blogId, author: username
 		}));
 	} catch (error) {
 		logger.error(`Error fetching blog: ${error.message}`);
@@ -269,7 +301,6 @@ const deleteBlog = async(req, res) => {
 	const { blogId } = req.params;
 	const { username } = req.user;
 	try {
-		const user = await models.User.findOne({ username });
 		const blog = await models.Blog.findOne({ _id: blogId });
 		if (!blog) {
 			return res.status(404).json({
@@ -283,13 +314,14 @@ const deleteBlog = async(req, res) => {
 				message: "Invalid Blog Id"
 			});
 		}
-		if (user._id !== blog.author) {
+		if (username !== blog.author) {
 			return res.status(403).json({
 				status: false,
-				message: "You can not update this blog authorized"
+				message: "You can not delete this blog"
 			});
 		}
 		await models.Blog.updateOne({ _id: blog._id}, { deleted: true});
+		return res.status(200).redirect("/blogs");
 	} catch (error) {
 		logger.error(`Error deleting blog: ${error.message}`);
 		return res.status(500).json({
@@ -300,5 +332,7 @@ const deleteBlog = async(req, res) => {
 };
 
 module.exports = {
-	createBlog, readSingleBlog, fetchBlogs, ownerBlog, updateBlog, updatePrefill, deleteBlog
+	createBlog, readSingleBlog, fetchBlogs,
+	ownerBlog, updateBlog, updatePrefill,
+	readOwnerSingleBlog, deleteBlog
 };

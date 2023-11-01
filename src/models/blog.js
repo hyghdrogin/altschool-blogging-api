@@ -12,13 +12,12 @@ const blogSchema = new Schema({
 		required: true
 	},
 	author: {
-		type: Schema.Types.ObjectId,
-		ref: "User",
+		type: String,
 		required: true
 	},
 	state: {
 		type: String,
-		enum: ["draft", "published", "deleted"],
+		enum: ["draft", "published"],
 		default: "draft",
 	},
 	readCount: {
