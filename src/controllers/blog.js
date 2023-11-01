@@ -321,7 +321,6 @@ const deleteBlog = async(req, res) => {
 			});
 		}
 		await models.Blog.updateOne({ _id: blog._id}, { deleted: true});
-		return res.status(200).redirect("/blogs");
 	} catch (error) {
 		logger.error(`Error deleting blog: ${error.message}`);
 		return res.status(500).json({
